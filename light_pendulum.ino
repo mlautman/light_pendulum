@@ -4,6 +4,7 @@
  */
 
 #include <FastLED.h>
+#include <LinkedList.h> // Make sure to include a LinkedList library
 
 
 #define NUM_LEDS_LEG 75
@@ -20,6 +21,7 @@
 #define COLOR_ORDER BGR
 #define RING_STRIP (&leds[0][NUM_LEDS_LEG])
 #define FADE_RATE (FRAMES_PER_SECOND * 3) 
+#define RIPPLE_FADE_RATE (FRAMES_PER_SECOND)
 #define GRAVITY -9.81  // Gravity constant, negative for downward acceleration
 #define BALL_SIZE 7
 
@@ -32,6 +34,18 @@ struct Ball {
   float velocity;
   CRGB color;
 };
+
+struct Ripple {
+  int start_index;
+  float radius;
+  float speed;
+  CRGB color;
+  float fade_rate;
+
+  Ripple(int start, float spd, CRGB clr, float fade) : start_index(start), radius(0), speed(spd), color(clr), fade_rate(fade) {}
+};
+LinkedList<Ripple*> ripples;
+
 
 // Randomly between 2 and 6 balls per strip
 Ball balls[NUM_LEGS][6];
@@ -61,7 +75,7 @@ void clear_leds()
       leds[i][j] = CRGB::Black;
 }
 
-void splash_ring(CRGB color) {
+void fill_ring(CRGB color) {
   for (int i = 0; i < NUM_LEDS_RING; i++) {
     RING_STRIP[i] = color;
   }
@@ -91,11 +105,10 @@ void draw_balls()
       balls[i][j].velocity += GRAVITY * (1.0 / FRAMES_PER_SECOND);
       balls[i][j].position += balls[i][j].velocity * (1.0 / FRAMES_PER_SECOND);
 
-      // Bounce check
       if (balls[i][j].position < 0) {
         balls[i][j].position = 0; // Reset position to the start of the strip
-        balls[i][j].velocity *= -1; //-0.8; // Invert velocity and reduce it by 20%
-        splash_ring(balls[i][j].color); 
+        balls[i][j].velocity *= -1; // Invert and dampen velocity
+        splash_ring(balls[i][j].color, NUM_LEDS_LEG, abs(balls[i][j].velocity)); // Start ripple at the base of the leg
       }
 
 
@@ -115,6 +128,39 @@ void draw_balls()
   }
   fade_ring(FADE_RATE/3);
 }
+
+void updateAndRenderRipples() {
+  for (int i = 0; i < ripples.size(); i++) {
+    Ripple* ripple = ripples.get(i);
+    
+    // Calculate new positions based on the ripple's speed
+    int forwardIndex = int(ripple->start_index + ripple->radius) % NUM_LEDS_RING;
+    int backwardIndex = int(ripple->start_index - ripple->radius) % NUM_LEDS_RING;
+    if (backwardIndex < 0) 
+      backwardIndex += NUM_LEDS_RING; // Wrap around the ring
+
+    // Set the color at the new positions and fade
+    RING_STRIP[forwardIndex] = ripple->color;
+    RING_STRIP[backwardIndex] = ripple->color;
+
+
+    // Increase radius for next frame
+    ripple->radius += ripple->speed;
+
+    // Check if the ripple should be removed
+    if (ripple->color.getLuma() < 10) { // Assuming fade_rate and color handling causes it to fade out
+      delete ripple; // Free memory
+      ripples.remove(i--);
+    }
+  }
+  // Fade all LEDs slightly
+  fade_ring(RIPPLE_FADE_RATE);  //this
+}
+
+void splash_ring(CRGB color, int index, double spd) {
+  ripples.add(new Ripple(index, spd, color, RIPPLE_FADE_RATE));
+}
+
 
 void rainbow_bottom()
 {
