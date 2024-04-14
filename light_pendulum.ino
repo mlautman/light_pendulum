@@ -111,15 +111,6 @@ void draw_balls()
         leds[i][NUM_LEDS_LEG - 1 - k] = balls[i][j].color;
         leds[i][NUM_LEDS_LEG - 1 - k].fadeToBlackBy(255 * (1 - brightnessFactor)); // Adjust brightness
       }
-      
-//      int ledPos = (int)balls[i][j].position;
-//      for (int k = max(0, ledPos - BALL_SIZE / 2); k <= min(NUM_LEDS_LEG - 1, ledPos + BALL_SIZE / 2); k++) {
-//        // Calculate distance from the center of the ball to the current LED
-//        float distanceFromCenter = abs(ledPos - k);
-//        float brightnessFactor = cos((distanceFromCenter / (BALL_SIZE / 2)) * PI / 2); // Normalize and apply cosine
-//        leds[i][NUM_LEDS_LEG - 1 - k] = balls[i][j].color;
-//        leds[i][NUM_LEDS_LEG - 1 - k].fadeToBlackBy(255 * (1 - brightnessFactor)); // Adjust brightness based on the cosine factor
-//      }
     }
   }
   fade_ring(FADE_RATE/3);
@@ -161,7 +152,7 @@ void setup() {
 
 
 uint frames = 0;
-double time_per_animation_s = 30;
+double time_per_animation_s = 15;
 double frames_per_animation = time_per_animation_s * FRAMES_PER_SECOND;
 void loop() {
 if (frames < 1*frames_per_animation)
