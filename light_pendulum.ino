@@ -84,10 +84,10 @@ void fill_ring(CRGB color) {
 void init_balls()
 {
   for (int i = 0; i < NUM_LEGS; i++) {
-    ballCount[i] = random(1, 8); // Random number of balls between 1 and 3
+    ballCount[i] = random(8, 16); // Random number of balls between 1 and 3
     for (int j = 0; j < ballCount[i]; j++) {
-      balls[i][j].position = random(30, NUM_LEDS_LEG - BALL_SIZE); // Start at a random height
-      balls[i][j].velocity = 0; // Initially, balls are not moving
+      balls[i][j].position = random(0, NUM_LEDS_LEG); // Start at a random height
+      balls[i][j].velocity = random(-50, 50) / 100.0; // Random velocity between -0.50 and 0.50 m/s
       balls[i][j].color = random_color(); // Assign a color or make it random
     }
   }
@@ -107,27 +107,68 @@ void draw_balls()
 
       if (balls[i][j].position < 0) {
         balls[i][j].position = 0; // Reset position to the start of the strip
-        balls[i][j].velocity *= -1; // Invert and dampen velocity
+        balls[i][j].velocity *= -1; // Invert velocity
         splash_ring(balls[i][j].color, NUM_LEDS_LEG, abs(balls[i][j].velocity)); // Start ripple at the base of the leg
       }
 
 
-      // Draw the ball
       // Draw the ball with a rounded effect and minimum brightness at the ends
+      // int ledPos = (int)balls[i][j].position;
+      // for (int k = max(0, ledPos - BALL_SIZE / 2); k <= min(NUM_LEDS_LEG - 1, ledPos + BALL_SIZE / 2); k++) {
+      //   // Calculate distance from the center of the ball to the current LED
+      //   float distanceFromCenter = abs(ledPos - k);
+      //   float brightnessFactor = cos((distanceFromCenter / (BALL_SIZE / 2)) * PI / 2); // Normalize and apply cosine
+      //   float minimumBrightness = 0.1; // Adjust to set the minimum brightness (0 for none, 1 for full)
+      //   brightnessFactor = (brightnessFactor * (1 - minimumBrightness)) + minimumBrightness;
+      //   leds[i][NUM_LEDS_LEG - 1 - k] = balls[i][j].color;
+      //   leds[i][NUM_LEDS_LEG - 1 - k].fadeToBlackBy(255 * (1 - brightnessFactor)); // Adjust brightness
+      // }
+
+      // Draw the ball with a leading edge and fading tail
       int ledPos = (int)balls[i][j].position;
-      for (int k = max(0, ledPos - BALL_SIZE / 2); k <= min(NUM_LEDS_LEG - 1, ledPos + BALL_SIZE / 2); k++) {
-        // Calculate distance from the center of the ball to the current LED
-        float distanceFromCenter = abs(ledPos - k);
-        float brightnessFactor = cos((distanceFromCenter / (BALL_SIZE / 2)) * PI / 2); // Normalize and apply cosine
-        float minimumBrightness = 0.1; // Adjust to set the minimum brightness (0 for none, 1 for full)
-        brightnessFactor = (brightnessFactor * (1 - minimumBrightness)) + minimumBrightness;
-        leds[i][NUM_LEDS_LEG - 1 - k] = balls[i][j].color;
-        leds[i][NUM_LEDS_LEG - 1 - k].fadeToBlackBy(255 * (1 - brightnessFactor)); // Adjust brightness
+      int tailLength = BALL_SIZE; // Length of the tail in LEDs
+      for (int k = 0; k < tailLength; k++) {
+        int ledIndex = ledPos - k; // Calculate LED index based on ball's direction and position
+        if (ledIndex >= 0 && ledIndex < NUM_LEDS_LEG) {
+          float brightnessFactor = (tailLength - k) / float(tailLength); // Linear fade
+          leds[i][NUM_LEDS_LEG - 1 - ledIndex] = balls[i][j].color;
+          leds[i][NUM_LEDS_LEG - 1 - ledIndex].fadeToBlackBy(255 * (1 - brightnessFactor)); // Apply fading effect
+        }
+      }
+
+    }
+  }
+  fade_ring(RIPPLE_FADE_RATE);
+}
+
+void draw_balls_2() {
+  // Apply a global fade to the LEDs to simulate a trailing effect
+  for (int i = 0; i < NUM_LEGS; i++) {
+    fadeToBlackBy(leds[i], NUM_LEDS_LEG, 10); // Adjust the fade value as needed
+  }
+
+  // Update and display balls
+  for (int i = 0; i < NUM_LEGS; i++) {
+    for (int j = 0; j < ballCount[i]; j++) {
+      // Physics update
+      balls[i][j].velocity += GRAVITY * (1.0 / FRAMES_PER_SECOND);
+      balls[i][j].position += balls[i][j].velocity * (1.0 / FRAMES_PER_SECOND);
+
+      if (balls[i][j].position < 0) {
+        balls[i][j].position = 0;
+        balls[i][j].velocity *= -1; // Invert velocity
+        splash_ring(balls[i][j].color, NUM_LEDS_LEG, abs(balls[i][j].velocity)); // Start ripple at the base of the leg
+      }
+
+      // Draw the ball at the new position with fading effect
+      int ledPos = (int)balls[i][j].position;
+      if (ledPos >= 0 && ledPos < NUM_LEDS_LEG) {
+        leds[i][ledPos] = balls[i][j].color;
       }
     }
   }
-  fade_ring(FADE_RATE/3);
 }
+
 
 void updateAndRenderRipples() {
   for (int i = 0; i < ripples.size(); i++) {
