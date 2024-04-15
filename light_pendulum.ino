@@ -19,9 +19,10 @@
 #define FRAMES_PER_SECOND 60
 #define LED_TYPE WS2811
 #define COLOR_ORDER BGR
+#define LEDS_PER_M 6
 #define RING_STRIP (&leds[0][NUM_LEDS_LEG])
 #define FADE_RATE (FRAMES_PER_SECOND * 3) 
-#define RIPPLE_FADE_RATE (FRAMES_PER_SECOND/10)
+#define RIPPLE_FADE_RATE (FRAMES_PER_SECOND / 3)
 #define GRAVITY -9.81  // Gravity constant, negative for downward acceleration
 #define BALL_SIZE 7
 
@@ -101,7 +102,7 @@ void init_balls()
   }
 }
 int sectionLength = NUM_LEDS_RING / NUM_LEGS;
-uint ballFadeRate = 255. / FRAMES_PER_SECOND * 1;
+uint ballFadeRate =   255. / FRAMES_PER_SECOND * 200.;
 void draw_balls() {
   // Apply a global fade to the LEDs to simulate a trailing effect
   fade_legs(ballFadeRate);
@@ -116,13 +117,10 @@ void draw_balls() {
       if (balls[i][j].position < 0) {
         balls[i][j].position = 0;
         balls[i][j].velocity *= -1; // Invert velocity
-        // Serial.println("bouncing");
         int rippleStartIndex = i * sectionLength; // Calculate the ripple start index based on the leg
 
         auto ripple = new Ripple(rippleStartIndex, abs(balls[i][j].velocity), balls[i][j].color, RIPPLE_FADE_RATE);
-        // Serial.println("Made a ripple");
         ripples.insert(ripple);
-        // Serial.println("added a ripple");
       }
 
       // Draw the ball at the new position with fading effect
@@ -145,6 +143,7 @@ void cleanupRipples() {
   }
 }
 
+uint rippleFadeRate =   255. / FRAMES_PER_SECOND * 200.;
 void updateAndRenderRipples() {
   // Serial.println("updateAndRenderRipples()");
   for (int i = 0; i < ripples.size(); i++) {
@@ -174,8 +173,7 @@ void updateAndRenderRipples() {
     }
   }
   // Fade all LEDs slightly
-  uint ringFadeRate = (uint)(255 / FRAMES_PER_SECOND * 0.5);
-  fade_ring(ringFadeRate);
+  fade_ring(rippleFadeRate);
 }
 
 void rainbow_bottom()
