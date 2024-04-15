@@ -214,8 +214,12 @@ void setup() {
 
 
 void loop() {
-if (frames < 1*frames_per_animation)
+  if (frames < 1*frames_per_animation)
   {
+    if (frames % (uint)frames_per_animation == 0)
+    {
+
+    }
     if (frames % (uint)frames_per_animation == 0)
     {
       // first balls
@@ -231,19 +235,19 @@ if (frames < 1*frames_per_animation)
       updateAndRenderRipples();
     }
   }  
-  // else if (frames < 2*frames_per_animation)
-  // {
-  //   rainbow_bottom();
-  // }
-  // else if (frames < 3*frames_per_animation)
-  // {
-  //   fade_ring(FADE_RATE);
-  //   fade_legs(FADE_RATE);
-  // }
-  // else if (frames < 4*frames_per_animation)
-  // {
-  //   rainbows();
-  // }
+  else if (frames < 2*frames_per_animation)
+  {
+    rainbow_bottom();
+  }
+  else if (frames < 3*frames_per_animation)
+  {
+    fade_ring(FADE_RATE);
+    fade_legs(FADE_RATE);
+  }
+  else if (frames < 4*frames_per_animation)
+  {
+    rainbows();
+  }
   else 
   {
     Serial.println("clearing and resetting loop");
