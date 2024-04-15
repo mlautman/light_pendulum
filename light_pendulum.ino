@@ -22,7 +22,7 @@
 #define LEDS_PER_M 6
 #define RING_STRIP (&leds[0][NUM_LEDS_LEG])
 #define FADE_RATE (FRAMES_PER_SECOND * 3) 
-#define RIPPLE_FADE_RATE (FRAMES_PER_SECOND / 3)
+#define RIPPLE_FADE_RATE (FRAMES_PER_SECOND / 8)
 #define GRAVITY -9.81  // Gravity constant, negative for downward acceleration
 #define BALL_SIZE 7
 
@@ -30,7 +30,7 @@ CRGB leds[NUM_LEGS][TOTAL_LEDS_LEG_RING];
 //CRGB ledsRing[TOTAL_LEDS_LEG_RING]; // Array for the leg + ring
 
 uint frames = 0;
-double time_per_animation_s = 5;
+double time_per_animation_s = 10;
 double frames_per_animation = time_per_animation_s * FRAMES_PER_SECOND;
 
 struct Ball {
@@ -96,13 +96,13 @@ void init_balls()
     ballCount[i] = 10; //random(8, 10); // Random number of balls between 1 and 3
     for (int j = 0; j < ballCount[i]; j++) {
       balls[i][j].position = random(10, NUM_LEDS_LEG); // Start at a random height
-      balls[i][j].velocity = random(-200, 00) / 100.0; // Random velocity between -0.50 and 0.50 m/s
+      balls[i][j].velocity = random(-200, 200) / 100.0; // Random velocity between -0.50 and 0.50 m/s
       balls[i][j].color = random_color(); // Assign a color or make it random
     }
   }
 }
 int sectionLength = NUM_LEDS_RING / NUM_LEGS;
-uint ballFadeRate =   255. / FRAMES_PER_SECOND * 200.;
+uint ballFadeRate =   255. / double(FRAMES_PER_SECOND) * 4;// * 100.;
 void draw_balls() {
   // Apply a global fade to the LEDs to simulate a trailing effect
   fade_legs(ballFadeRate);
@@ -143,7 +143,7 @@ void cleanupRipples() {
   }
 }
 
-uint rippleFadeRate =   255. / FRAMES_PER_SECOND * 200.;
+uint rippleFadeRate =   255. / double(FRAMES_PER_SECOND) * 250.;
 void updateAndRenderRipples() {
   // Serial.println("updateAndRenderRipples()");
   for (int i = 0; i < ripples.size(); i++) {
